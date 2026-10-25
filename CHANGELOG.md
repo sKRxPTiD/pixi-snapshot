@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 — 2026-10-25 — QuickSnaps naming update
+
+- Renamed the app to **PiXi QuickSnaps** and its backups to **QuickSnaps** throughout screens, dialogs, accessibility labels, notifications, privacy text, and documentation.
+- New backups use the `pixi-quicksnap-` filename prefix.
+- Existing installations, saved settings, queued exports, and 0.1.0 ZIP backups remain compatible.
+- Updated public screenshots and the signed APK.
+
 ## 0.1.0 — 2026-10-25 — public preview
 
 - Offline app inventory, source labels/URLs, installer package attribution, named profile, and setup notes.

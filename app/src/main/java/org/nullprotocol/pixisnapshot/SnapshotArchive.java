@@ -57,10 +57,10 @@ final class SnapshotArchive {
                        Uri novaUri, Uri wallpaperUri, List<Uri> screenshots) throws Exception {
         String stamp = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS", Locale.US).format(new Date());
         File parent = new File(context.getFilesDir(), "snapshots");
-        if (parent != null && !parent.exists() && !parent.mkdirs()) throw new Exception("Cannot create snapshot folder.");
-        if (screenshots.size() > 100) throw new Exception("Choose no more than 100 screenshots per snapshot.");
+        if (parent != null && !parent.exists() && !parent.mkdirs()) throw new Exception("Cannot create QuickSnap folder.");
+        if (screenshots.size() > 100) throw new Exception("Choose no more than 100 screenshots per QuickSnap.");
         if (profile.length() > 256 || notes.length() > 65536) throw new Exception("Profile or notes are too long.");
-        File out = File.createTempFile("pixi-snapshot-" + stamp + "-", ".partial", parent);
+        File out = File.createTempFile("pixi-quicksnap-" + stamp + "-", ".partial", parent);
         JSONObject root = new JSONObject();
         root.put("format", "org.nullprotocol.pixi-snapshot");
         root.put("formatVersion", 1);
@@ -101,7 +101,7 @@ final class SnapshotArchive {
                 addUri(context, zip, "assets/screenshots/" + (i + 1) + "-" + safeName(displayName(context, screenshots.get(i)), "screenshot"), screenshots.get(i), total);
         } catch (Exception e) { out.delete(); throw e; }
         File complete = new File(parent, out.getName().replace(".partial", ".zip"));
-        if (!out.renameTo(complete)) { out.delete(); throw new Exception("Could not finish the snapshot file."); }
+        if (!out.renameTo(complete)) { out.delete(); throw new Exception("Could not finish the QuickSnap file."); }
         return complete;
     }
 
@@ -112,39 +112,39 @@ final class SnapshotArchive {
             java.util.Enumeration<? extends ZipEntry> entries = zip.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry e = entries.nextElement();
-                if (++count > MAX_ENTRIES || !names.add(e.getName())) throw new Exception("Snapshot has too many entries or duplicate file names.");
+                if (++count > MAX_ENTRIES || !names.add(e.getName())) throw new Exception("QuickSnap has too many entries or duplicate file names.");
                 if (e.getSize() < 0 || e.getSize() > MAX_ARCHIVE_BYTES || (total += e.getSize()) > MAX_ARCHIVE_BYTES)
-                    throw new Exception("Snapshot exceeds the 256 MiB uncompressed limit.");
+                    throw new Exception("QuickSnap exceeds the 256 MiB uncompressed limit.");
             }
             ZipEntry manifest = zip.getEntry(MANIFEST);
-            if (manifest == null || manifest.isDirectory()) throw new Exception("This ZIP does not contain a PiXi Snapshot manifest.");
+            if (manifest == null || manifest.isDirectory()) throw new Exception("This ZIP does not contain a PiXi QuickSnaps manifest.");
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             try (InputStream in = zip.getInputStream(manifest)) { copyLimited(in, out, MAX_MANIFEST_BYTES); }
             JSONObject root = new JSONObject(out.toString("UTF-8"));
             if (!"org.nullprotocol.pixi-snapshot".equals(root.optString("format")) || root.optInt("formatVersion", -1) != 1)
-                throw new Exception("Unsupported snapshot format or version.");
+                throw new Exception("Unsupported QuickSnap format or version.");
             JSONArray apps = root.optJSONArray("apps"), assets = root.optJSONArray("assets");
-            if (apps == null || assets == null || apps.length() > 5000 || assets.length() > 102) throw new Exception("Invalid snapshot inventory.");
+            if (apps == null || assets == null || apps.length() > 5000 || assets.length() > 102) throw new Exception("Invalid QuickSnap inventory.");
             for (int i=0;i<apps.length();i++) {
                 JSONObject app = apps.optJSONObject(i);
                 if (app == null || !app.optString("package").matches("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+"))
-                    throw new Exception("Snapshot contains an invalid app package name.");
+                    throw new Exception("QuickSnap contains an invalid app package name.");
             }
             java.util.HashSet<String> declared = new java.util.HashSet<>();
             for (int i=0;i<assets.length();i++) {
                 String name = assets.getString(i); ZipEntry asset = zip.getEntry(name);
-                if (!validAssetName(name) || !declared.add(name) || asset == null || asset.isDirectory()) throw new Exception("Snapshot contains an invalid or missing setup file.");
+                if (!validAssetName(name) || !declared.add(name) || asset == null || asset.isDirectory()) throw new Exception("QuickSnap contains an invalid or missing setup file.");
             }
             return root;
         } finally { cached.delete(); }
     }
 
     static void copyEntryTo(Context context, Uri archive, String name, Uri destination) throws Exception {
-        if (!validAssetName(name)) throw new Exception("Invalid snapshot file name.");
+        if (!validAssetName(name)) throw new Exception("Invalid QuickSnap file name.");
         File cached = cacheArchive(context, archive);
         try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(cached)) {
             ZipEntry entry = zip.getEntry(name);
-            if (entry == null || entry.isDirectory()) throw new Exception("That snapshot does not contain the requested file.");
+            if (entry == null || entry.isDirectory()) throw new Exception("That QuickSnap does not contain the requested file.");
             try (InputStream in = zip.getInputStream(entry); OutputStream out = context.getContentResolver().openOutputStream(destination, "wt")) {
                 if (out == null) throw new Exception("Cannot write the selected destination.");
                 copyLimited(in, out, MAX_ARCHIVE_BYTES);
@@ -159,7 +159,7 @@ final class SnapshotArchive {
     private static File cacheArchive(Context context, Uri archive) throws Exception {
         File cached = File.createTempFile("pixi-restore-", ".zip", context.getCacheDir());
         try (InputStream in = context.getContentResolver().openInputStream(archive); OutputStream out = new FileOutputStream(cached)) {
-            if (in == null) throw new Exception("Cannot open selected snapshot.");
+            if (in == null) throw new Exception("Cannot open selected QuickSnap.");
             copyLimited(in, out, MAX_ARCHIVE_BYTES);
         } catch (Exception e) { cached.delete(); throw e; }
         return cached;
@@ -168,7 +168,7 @@ final class SnapshotArchive {
     private static long copyLimited(InputStream in, OutputStream out, long maximum) throws Exception {
         long total = 0; byte[] buffer = new byte[32768]; int count;
         while ((count = in.read(buffer)) != -1) {
-            total += count; if (total > maximum) throw new Exception("Selected file exceeds the snapshot size limit."); out.write(buffer, 0, count);
+            total += count; if (total > maximum) throw new Exception("Selected file exceeds the QuickSnap size limit."); out.write(buffer, 0, count);
         }
         return total;
     }
@@ -199,7 +199,7 @@ final class SnapshotArchive {
             if (in == null) throw new Exception("Cannot read selected file: " + displayName(context, uri));
             byte[] buffer = new byte[32768]; int count;
             while ((count = in.read(buffer)) != -1) {
-                total[0] += count; if (total[0] > MAX_ARCHIVE_BYTES) throw new Exception("Setup files exceed the 256 MiB snapshot limit."); zip.write(buffer, 0, count);
+                total[0] += count; if (total[0] > MAX_ARCHIVE_BYTES) throw new Exception("Setup files exceed the 256 MiB QuickSnap limit."); zip.write(buffer, 0, count);
             }
         }
         zip.closeEntry();

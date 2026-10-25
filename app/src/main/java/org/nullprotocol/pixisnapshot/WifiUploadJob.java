@@ -38,7 +38,7 @@ public class WifiUploadJob extends JobService {
     static void cancel(Context context) {
         ((JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE)).cancel(JOB_ID);
         context.getSharedPreferences("pixi_snapshot", MODE_PRIVATE).edit().remove("pendingFile")
-                .putString("lastUpload", "Host export cancelled · local snapshot kept.").apply();
+                .putString("lastUpload", "Host export cancelled · local QuickSnap kept.").apply();
         ((NotificationManager) context.getSystemService(NOTIFICATION_SERVICE)).cancel(JOB_ID);
     }
 
@@ -49,28 +49,28 @@ public class WifiUploadJob extends JobService {
             try {
                 File file = new File(params.getExtras().getString("file", ""));
                 File allowed = new File(getFilesDir(), "snapshots").getCanonicalFile();
-                if (!allowed.equals(file.getCanonicalFile().getParentFile())) throw new Exception("Invalid snapshot location.");
+                if (!allowed.equals(file.getCanonicalFile().getParentFile())) throw new Exception("Invalid QuickSnap location.");
                 SftpTransfer.Destination destination = SftpTransfer.Destination.fromBundle(params.getExtras());
                 p.edit().putString("lastUpload", "Sending " + file.getName() + " → " + destination.host).apply();
-                notifyUser("Sending snapshot", file.getName() + " → " + destination.host, -1, false);
+                notifyUser("Sending QuickSnap", file.getName() + " → " + destination.host, -1, false);
                 final long[] lastUpdate = {0};
                 task.transfer.upload(this, file, destination, Build.VERSION.SDK_INT >= 28 ? params.getNetwork() : null, (sent, total) -> {
                     long now = android.os.SystemClock.elapsedRealtime();
                     if (!task.stopped && now - lastUpdate[0] > 1000) {
                         lastUpdate[0] = now; int percent = (int) Math.min(100, total == 0 ? 0 : sent * 100 / total);
                         p.edit().putString("lastUpload", "Sending · " + percent + "% → " + destination.host).apply();
-                        notifyUser("Sending snapshot", file.getName(), percent, false);
+                        notifyUser("Sending QuickSnap", file.getName(), percent, false);
                     }
                 });
                 if (!task.stopped) {
                     p.edit().remove("pendingFile").putString("lastUpload", "Upload complete · " + file.getName() + " → " + destination.host).commit();
-                    notifyUser("Snapshot uploaded", "Saved to " + destination.host + ". Local copy kept.", 100, true);
+                    notifyUser("QuickSnap uploaded", "Saved to " + destination.host + ". Local copy kept.", 100, true);
                 }
             } catch (Exception e) {
                 if (!task.stopped) {
                     String message = e.getMessage() == null ? "Check the host and SSH settings." : e.getMessage();
                     p.edit().remove("pendingFile").putString("lastUpload", "Host upload failed · " + message).commit();
-                    notifyUser("Snapshot upload failed", message + " · local snapshot kept", -1, true);
+                    notifyUser("QuickSnap upload failed", message + " · local QuickSnap kept", -1, true);
                 }
             } finally {
                 if (!task.stopped) new android.os.Handler(getMainLooper()).post(() -> { if (running == task) { running = null; jobFinished(params, false); } });
@@ -81,7 +81,7 @@ public class WifiUploadJob extends JobService {
 
     private void notifyUser(String title, String message, int percent, boolean done) {
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        manager.createNotificationChannel(new NotificationChannel("pixi_snapshot", "Snapshot exports", NotificationManager.IMPORTANCE_LOW));
+        manager.createNotificationChannel(new NotificationChannel("pixi_snapshot", "QuickSnap exports", NotificationManager.IMPORTANCE_LOW));
         PendingIntent open = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder notification = new Notification.Builder(this, "pixi_snapshot")
                 .setSmallIcon(android.R.drawable.stat_sys_upload).setContentTitle(title).setContentText(message).setContentIntent(open)

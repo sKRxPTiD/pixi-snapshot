@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
     private boolean fileOperation;
     private SharedPreferences prefs;
     private final SharedPreferences.OnSharedPreferenceChangeListener uploadListener = (p, key) -> {
-        if ("lastUpload".equals(key) && status != null) runOnUiThread(() -> status.setText(p.getString("lastUpload", "")));
+        if ("lastUpload".equals(key) && status != null) runOnUiThread(() -> status.setText(displayUploadStatus(p.getString("lastUpload", ""))));
     };
 
     @Override public void onCreate(Bundle state) {
@@ -78,17 +78,23 @@ public class MainActivity extends Activity {
         makeUi();
         latestArchive = findLatestArchive();
         String lastUpload = prefs.getString("lastUpload", "");
-        if (!lastUpload.isEmpty()) status.setText(lastUpload);
-        else if (latestArchive != null) status.setText("Latest snapshot · " + humanSize(latestArchive.length()));
+        if (!lastUpload.isEmpty()) status.setText(displayUploadStatus(lastUpload));
+        else if (latestArchive != null) status.setText("Latest QuickSnap · " + humanSize(latestArchive.length()));
         if (exportLatestButton != null) exportLatestButton.setEnabled(latestArchive != null);
     }
 
-    @Override protected void onResume() { super.onResume(); if (prefs != null) { prefs.registerOnSharedPreferenceChangeListener(uploadListener); String upload = prefs.getString("lastUpload", ""); if (!upload.isEmpty() && status != null) status.setText(upload); } }
+    @Override protected void onResume() { super.onResume(); if (prefs != null) { prefs.registerOnSharedPreferenceChangeListener(uploadListener); String upload = prefs.getString("lastUpload", ""); if (!upload.isEmpty() && status != null) status.setText(displayUploadStatus(upload)); } }
     @Override protected void onPause() { if (prefs != null) prefs.unregisterOnSharedPreferenceChangeListener(uploadListener); super.onPause(); }
     @Override protected void onSaveInstanceState(Bundle state) {
         if (restoreArchive != null) state.putString("restoreArchive", restoreArchive.toString());
         state.putString("restoreNovaEntry", restoreNovaEntry); state.putString("restoreWallpaperEntry", restoreWallpaperEntry); state.putString("restoreScreenshotEntry", restoreScreenshotEntry);
         state.putBoolean("uploadAfterConfig", uploadAfterConfig); super.onSaveInstanceState(state);
+    }
+
+    // Persisted messages from earlier versions should use the current vocabulary.
+    private String displayUploadStatus(String text) {
+        return text.replaceAll("(?i)(?<![\\w./-])snapshots(?![\\w./-])", "QuickSnaps")
+                .replaceAll("(?i)(?<![\\w./-])snapshot(?![\\w./-])", "QuickSnap");
     }
 
     private void makeUi() {
@@ -100,19 +106,19 @@ public class MainActivity extends Activity {
         PixieLogoView pixi = new PixieLogoView(this); pixi.setContentDescription("PiXi"); body.addView(pixi, new LinearLayout.LayoutParams(-1, dp(54)));
         PixieDustView dust = new PixieDustView(this); dust.setContentDescription("Pixie dust falling from the PiXi wordmark");
         LinearLayout.LayoutParams dustParams = new LinearLayout.LayoutParams(-1, dp(56)); dustParams.setMargins(-dp(22), 0, -dp(22), 0); body.addView(dust, dustParams);
-        TextView snapshot = new TextView(this); snapshot.setText("Snapshot"); snapshot.setTextSize(25); snapshot.setTypeface(null, Typeface.BOLD); snapshot.setTextColor(accent); snapshot.setGravity(Gravity.CENTER); snapshot.setPadding(0, 0, 0, dp(3)); body.addView(snapshot);
-        TextView intro = label("Remember your apps and phone setup. Build or restore a snapshot offline."); intro.setGravity(Gravity.CENTER); intro.setPadding(0, dp(4), 0, dp(14)); body.addView(intro);
+        TextView snapshot = new TextView(this); snapshot.setText("QuickSnaps"); snapshot.setTextSize(25); snapshot.setTypeface(null, Typeface.BOLD); snapshot.setTextColor(accent); snapshot.setGravity(Gravity.CENTER); snapshot.setPadding(0, 0, 0, dp(3)); body.addView(snapshot);
+        TextView intro = label("Remember your apps and phone setup. Build or restore a QuickSnap offline."); intro.setGravity(Gravity.CENTER); intro.setPadding(0, dp(4), 0, dp(14)); body.addView(intro);
         LinearLayout remote = new LinearLayout(this); remote.setOrientation(LinearLayout.VERTICAL); remote.setPadding(dp(8), dp(8), dp(8), dp(8));
         android.graphics.drawable.GradientDrawable shell = new android.graphics.drawable.GradientDrawable(); shell.setColor(0xff292a31); shell.setCornerRadius(dp(22)); shell.setStroke(dp(1), 0xff494a54); remote.setBackground(shell);
         LinearLayout firstRow = new LinearLayout(this); firstRow.setOrientation(LinearLayout.HORIZONTAL);
-        View create = remoteTile("●", "CREATE", "New snapshot", true); firstRow.addView(create, tileParams()); create.setOnClickListener(v -> createSnapshot());
-        View restore = remoteTile("↻", "RESTORE", "Open a snapshot", false); firstRow.addView(restore, tileParams()); restore.setOnClickListener(v -> pick(PICK_ARCHIVE, "application/zip", false));
+        View create = remoteTile("●", "CREATE", "New QuickSnap", true); firstRow.addView(create, tileParams()); create.setOnClickListener(v -> createSnapshot());
+        View restore = remoteTile("↻", "RESTORE", "Open a QuickSnap", false); firstRow.addView(restore, tileParams()); restore.setOnClickListener(v -> pick(PICK_ARCHIVE, "application/zip", false));
         LinearLayout secondRow = new LinearLayout(this); secondRow.setOrientation(LinearLayout.HORIZONTAL);
-        exportLatestButton = remoteTile("↥", "EXPORT", "Latest snapshot", false); secondRow.addView(exportLatestButton, tileParams()); exportLatestButton.setOnClickListener(v -> offerLatest());
+        exportLatestButton = remoteTile("↥", "EXPORT", "Latest QuickSnap", false); secondRow.addView(exportLatestButton, tileParams()); exportLatestButton.setOnClickListener(v -> offerLatest());
         exportLatestButton.setEnabled(false);
         View setup = remoteTile("⚙", "SETUP", "Details & destinations", false); secondRow.addView(setup, tileParams()); setup.setOnClickListener(v -> editSetupDetails());
         remote.addView(firstRow); remote.addView(secondRow); LinearLayout.LayoutParams remoteParams = new LinearLayout.LayoutParams(-1, -2); remoteParams.topMargin = dp(8); remoteParams.bottomMargin = dp(12); body.addView(remote, remoteParams);
-        status = label("NO SNAPSHOT YET  ·  WORKS OFFLINE"); status.setGravity(Gravity.CENTER); status.setTextSize(12); status.setTypeface(null, Typeface.BOLD); status.setPadding(dp(10), dp(10), dp(10), dp(10));
+        status = label("NO QUICKSNAP YET  ·  WORKS OFFLINE"); status.setGravity(Gravity.CENTER); status.setTextSize(12); status.setTypeface(null, Typeface.BOLD); status.setPadding(dp(10), dp(10), dp(10), dp(10));
         android.graphics.drawable.GradientDrawable display = new android.graphics.drawable.GradientDrawable(); display.setColor(0xff17181d); display.setCornerRadius(dp(12)); display.setStroke(dp(1), 0xff4d4e58); status.setBackground(display); body.addView(status);
         screen.addView(body, new LinearLayout.LayoutParams(-1, -2));
         ScrollView home = new ScrollView(this); home.setFillViewport(true); home.setBackgroundColor(bg); home.addView(screen, new ScrollView.LayoutParams(-1, -2)); setContentView(home);
@@ -289,15 +295,15 @@ public class MainActivity extends Activity {
                     if (exportLatestButton != null) exportLatestButton.setEnabled(true);
                     prefs.edit().putString("profile", profileText).putString("notes", notesText).apply();
                     String size = humanSize(latestArchive.length());
-                    new AlertDialog.Builder(this).setTitle("Snapshot is ready")
+                    new AlertDialog.Builder(this).setTitle("QuickSnap is ready")
                             .setMessage(apps.length() + " user apps and selected setup files\nArchive size: " + size + "\n\nWhere should this copy go?")
                             .setPositiveButton("Save on this phone", (d, w) -> saveLocal())
                             .setNeutralButton("Send to a host…", (d, w) -> { if (prefs.getString("host", "").isEmpty() || keyUri == null || knownHostsUri == null) { uploadAfterConfig = true; configureHost(); } else askNetworkAndUpload(); })
-                            .setNegativeButton("Later", (d, w) -> status.setText("Snapshot created · " + size + " · stored inside PiXi Snapshot until exported."))
+                            .setNegativeButton("Later", (d, w) -> status.setText("QuickSnap created · " + size + " · stored inside PiXi QuickSnaps until exported."))
                             .show();
                 });
             } catch (Exception e) {
-                runOnUiThread(() -> { buildingSnapshot = false; error("Could not create snapshot", e); });
+                runOnUiThread(() -> { buildingSnapshot = false; error("Could not create QuickSnap", e); });
             }
         }, "pixi-snapshot-create").start();
     }
@@ -311,9 +317,9 @@ public class MainActivity extends Activity {
     }
 
     private void offerLatest() {
-        if (latestArchive == null || !latestArchive.isFile()) { toast("Create a snapshot first."); return; }
+        if (latestArchive == null || !latestArchive.isFile()) { toast("Create a QuickSnap first."); return; }
         String size = humanSize(latestArchive.length());
-        new AlertDialog.Builder(this).setTitle("Snapshot · " + size)
+        new AlertDialog.Builder(this).setTitle("QuickSnap · " + size)
                 .setMessage(latestArchive.getName() + "\n\nSave a copy on this phone or send it to a host?")
                 .setPositiveButton("Save on this phone", (d,w) -> saveLocal())
                 .setNeutralButton("Send to a host…", (d,w) -> { if (prefs.getString("host", "").isEmpty() || keyUri == null || knownHostsUri == null) { uploadAfterConfig = true; configureHost(); } else askNetworkAndUpload(); })
@@ -341,7 +347,7 @@ public class MainActivity extends Activity {
     }
 
     private void showAppCount() {
-        try { int count = captureApps().length(); status.setText(count + " user-installed apps found. Open “Review app sources” to correct store labels before creating the snapshot."); }
+        try { int count = captureApps().length(); status.setText(count + " user-installed apps found. Open “Review app sources” to correct store labels before creating the QuickSnap."); }
         catch (Exception e) { error("Could not scan apps", e); }
     }
 
@@ -380,7 +386,7 @@ public class MainActivity extends Activity {
 
     private void configureHost() {
         LinearLayout box = new LinearLayout(this); box.setPadding(dp(16), dp(6), dp(16), dp(8)); box.setOrientation(LinearLayout.VERTICAL);
-        box.addView(label("Send directly by SFTP over Wi-Fi, mobile data, or your phone’s Tailscale connection. Each destination has its own settings. Use an SSH key without a passphrase and a trusted known_hosts file. SSH files stay out of snapshots."));
+        box.addView(label("Send directly by SFTP over Wi-Fi, mobile data, or your phone’s Tailscale connection. Each destination has its own settings. Use an SSH key without a passphrase and a trusted known_hosts file. SSH files stay out of QuickSnaps."));
         destination = new Spinner(this);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, new String[]{"My server", "Dolo", "Swervo", "Novo"}); destination.setAdapter(adapter);
         int selected = Math.min(3, Math.max(0, prefs.getInt("destinationChoice", 0))); destination.setSelection(selected, false); box.addView(destination);
@@ -417,7 +423,7 @@ public class MainActivity extends Activity {
         String prefix = "dest" + index + ":";
         if (!prefs.contains(prefix+"host") && allowLegacy) prefix = "";
         host.setText(prefs.getString(prefix+"host", "")); remotePort.setText(String.valueOf(prefs.getInt(prefix+"port", 22)));
-        remoteUser.setText(prefs.getString(prefix+"remoteUser", "")); remoteFolder.setText(prefs.getString(prefix+"remoteFolder", "snapshots"));
+        remoteUser.setText(prefs.getString(prefix+"remoteUser", "")); remoteFolder.setText(prefs.getString(prefix+"remoteFolder", "quick-snaps"));
         keyUri = uriPref(prefix+"keyUri"); knownHostsUri = uriPref(prefix+"knownHostsUri");
         keyLabel.setText(keyUri == null ? "SSH private key: not selected" : "SSH private key selected"); hostsLabel.setText(knownHostsUri == null ? "known_hosts: not selected" : "known_hosts selected");
     }
@@ -428,7 +434,7 @@ public class MainActivity extends Activity {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         boolean metered = cm == null || cm.isActiveNetworkMetered();
         new AlertDialog.Builder(this).setTitle("Server export · " + humanSize(latestArchive.length()))
-                .setMessage("Send to " + prefs.getString("host", "") + "?\n\n" + (metered ? "Your current network may use mobile data or be disconnected. " : "Your current network is unmetered. ") + "You can send now or wait for an unmetered connection. Keep a local copy: snapshots are not password-encrypted.")
+                .setMessage("Send to " + prefs.getString("host", "") + "?\n\n" + (metered ? "Your current network may use mobile data or be disconnected. " : "Your current network is unmetered. ") + "You can send now or wait for an unmetered connection. Keep a local copy: QuickSnaps are not password-encrypted.")
                 .setPositiveButton("Send now", (d,w) -> scheduleUpload(false)).setNeutralButton("Wait for Wi-Fi", (d,w) -> scheduleUpload(true)).setNegativeButton("Cancel", null).show();
     }
 
@@ -439,7 +445,7 @@ public class MainActivity extends Activity {
         try {
             if (!WifiUploadJob.schedule(this, latestArchive, SftpTransfer.Destination.fromPreferences(prefs), unmetered))
                 toast("An export is already queued or could not be scheduled. Cancel it in Setup to replace it.");
-            status.setText(prefs.getString("lastUpload", ""));
+            status.setText(displayUploadStatus(prefs.getString("lastUpload", "")));
         } catch (Exception e) { error("Could not queue export", e); }
     }
 
@@ -461,7 +467,7 @@ public class MainActivity extends Activity {
                 case PICK_ARCHIVE: restoreArchive = keep(uri); openRestore(uri); break;
                 case SAVE_ARCHIVE: {
                     File file = latestArchive;
-                    performFileWork("Saving snapshot…", () -> copyFile(file, uri), () -> status.setText("Saved " + humanSize(file.length()) + " to the selected folder.")); break;
+                    performFileWork("Saving QuickSnap…", () -> copyFile(file, uri), () -> status.setText("Saved " + humanSize(file.length()) + " to the selected folder.")); break;
                 }
                 case SAVE_NOVA: {
                     Uri archive = restoreArchive; String entry = restoreNovaEntry;
@@ -484,12 +490,12 @@ public class MainActivity extends Activity {
 
     private void openRestore(Uri archive) {
         if (fileOperation) { toast("Please wait for the current file operation."); return; }
-        fileOperation = true; status.setText("Reading snapshot…");
+        fileOperation = true; status.setText("Reading QuickSnap…");
         new Thread(() -> {
             try {
                 JSONObject manifest = SnapshotArchive.readManifest(this, archive);
                 runOnUiThread(() -> { fileOperation = false; if (!isFinishing() && !isDestroyed()) { restoreArchive = archive; restoreManifest = manifest; showRestoreGuide(); } });
-            } catch (Exception e) { runOnUiThread(() -> { fileOperation = false; if (!isFinishing() && !isDestroyed()) error("Cannot read this snapshot", e); }); }
+            } catch (Exception e) { runOnUiThread(() -> { fileOperation = false; if (!isFinishing() && !isDestroyed()) error("Cannot read this QuickSnap", e); }); }
         }, "pixi-snapshot-read").start();
     }
 
@@ -515,7 +521,7 @@ public class MainActivity extends Activity {
             if (assets != null) { for (int i=0;i<assets.length();i++) { String a=assets.optString(i); if (a.startsWith("assets/screenshots/")) { Button s=button("Export screenshot · "+a.substring(a.lastIndexOf('/')+1),0xffead1dd); box.addView(s); s.setOnClickListener(v -> { restoreScreenshotEntry=a; startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT).setType("image/*").addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE,a.substring(a.lastIndexOf('/')+1)), SAVE_SCREENSHOT); }); } } }
             ScrollView restoreScroll = new ScrollView(this); restoreScroll.addView(box);
             new AlertDialog.Builder(this).setTitle("Setup restore guide").setView(restoreScroll).setPositiveButton("Close",null).show();
-        } catch (Exception e) { error("Cannot read this snapshot", e); }
+        } catch (Exception e) { error("Cannot read this QuickSnap", e); }
     }
 
     private void showMissing(JSONArray apps) {

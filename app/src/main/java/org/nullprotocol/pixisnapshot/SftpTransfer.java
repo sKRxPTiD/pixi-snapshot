@@ -51,7 +51,7 @@ final class SftpTransfer {
     void cancel() { cancelled = true; Session session = activeSession; if (session != null) session.disconnect(); }
 
     void upload(Context context, File archive, Destination destination, Network network, Progress progress) throws Exception {
-        if (!archive.isFile()) throw new Exception("The selected snapshot is missing.");
+        if (!archive.isFile()) throw new Exception("The selected QuickSnap is missing.");
         if (cancelled) throw new InterruptedException("Upload cancelled.");
         byte[] key = null;
         JSch jsch = new JSch();
@@ -89,7 +89,7 @@ final class SftpTransfer {
                 public void end() {}
             }, ChannelSftp.OVERWRITE);
             if (cancelled) throw new InterruptedException("Upload cancelled.");
-            if (sftp.stat(partial).getSize() != archive.length()) throw new Exception("Uploaded file size does not match the local snapshot.");
+            if (sftp.stat(partial).getSize() != archive.length()) throw new Exception("Uploaded file size does not match the local QuickSnap.");
             sftp.rename(partial, target); partial = null;
         } finally {
             if (sftp != null) {
