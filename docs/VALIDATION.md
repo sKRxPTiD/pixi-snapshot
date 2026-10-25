@@ -1,5 +1,9 @@
 # Validation
 
+## 0.1.2 creator credit
+
+Signed release build and release lint passed. APK signature verified with the existing release certificate. The main screen was opened on the Android 15/API 35 emulator and visually checked; the requested creator credit appears centered below the status panel. The README screenshot was refreshed from that clean emulator screen. No backup, restore, or SFTP behavior changed, and the release was not installed on the physical phone.
+
 ## Run archive and lifecycle checks
 
 Use a disposable Android emulator. The custom instrumentation runner deliberately refuses physical devices because it resets the test app's preferences. It uses only platform instrumentation APIs; no Google test service is required.

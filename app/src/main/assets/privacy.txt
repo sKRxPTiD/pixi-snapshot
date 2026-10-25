@@ -1,6 +1,6 @@
 # Privacy and backup limits
 
-PiXi QuickSnaps 0.1.1 — effective October 25, 2026.
+PiXi QuickSnaps 0.1.2 — effective October 25, 2026.
 
 PiXi QuickSnaps works offline. It has no ads, analytics, telemetry, account system, or Google Play Services dependency. The developers do not receive your inventory, QuickSnaps, files, or SSH credentials.
 

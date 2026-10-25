@@ -4,11 +4,11 @@
 
 A small, fully open-source Android setup recorder from ∅ Protocol, aimed at de-Googled phones. Create a QuickSnap on the phone while offline; save it locally or send it directly to your own server. No Google account, Google Play Services, root, subscription, analytics, or developer-operated cloud service required.
 
-**0.1.1 is a public preview.** It provides an app inventory and assisted setup restore, with explicit user actions. It is not a full-device backup or an automatic replacement for Android's privileged restore services.
+**0.1.2 is a public preview.** It provides an app inventory and assisted setup restore, with explicit user actions. It is not a full-device backup or an automatic replacement for Android's privileged restore services.
 
-[Download the signed APK](https://github.com/sKRxPTiD/pixi-snapshot/releases/tag/v0.1.1) · [Privacy](PRIVACY.md) · [Release checks](docs/VALIDATION.md) · [MIT license](LICENSE)
+[Download the signed APK](https://github.com/sKRxPTiD/pixi-snapshot/releases/tag/v0.1.2) · [Privacy](PRIVACY.md) · [Release checks](docs/VALIDATION.md) · [MIT license](LICENSE)
 
-<img src="docs/home.png" alt="PiXi QuickSnaps home screen: pink fairy dust and four main buttons on charcoal gray" width="300" />
+<img src="docs/home.png" alt="PiXi QuickSnaps home screen: pink fairy dust, four main buttons, and creator credit on charcoal gray" width="300" />
 
 ## Four buttons
 

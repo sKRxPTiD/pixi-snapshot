@@ -120,6 +120,7 @@ public class MainActivity extends Activity {
         remote.addView(firstRow); remote.addView(secondRow); LinearLayout.LayoutParams remoteParams = new LinearLayout.LayoutParams(-1, -2); remoteParams.topMargin = dp(8); remoteParams.bottomMargin = dp(12); body.addView(remote, remoteParams);
         status = label("NO QUICKSNAP YET  ·  WORKS OFFLINE"); status.setGravity(Gravity.CENTER); status.setTextSize(12); status.setTypeface(null, Typeface.BOLD); status.setPadding(dp(10), dp(10), dp(10), dp(10));
         android.graphics.drawable.GradientDrawable display = new android.graphics.drawable.GradientDrawable(); display.setColor(0xff17181d); display.setCornerRadius(dp(12)); display.setStroke(dp(1), 0xff4d4e58); status.setBackground(display); body.addView(status);
+        TextView creator = label("Created by:  ϟKR🅧PTID"); creator.setGravity(Gravity.CENTER); creator.setTextSize(12); creator.setTextColor(0xffaaa7b1); creator.setPadding(0, dp(12), 0, 0); body.addView(creator);
         screen.addView(body, new LinearLayout.LayoutParams(-1, -2));
         ScrollView home = new ScrollView(this); home.setFillViewport(true); home.setBackgroundColor(bg); home.addView(screen, new ScrollView.LayoutParams(-1, -2)); setContentView(home);
     }
