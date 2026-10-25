@@ -1,0 +1,17 @@
+.gradle/
+build/
+app/build/
+local.properties
+*.jks
+*.keystore
+*.p12
+keystore.properties
+*.apk
+*.aab
+*.zip
+*.partial
+*.log
+*.pem
+*.key
+*.properties.private
+release/

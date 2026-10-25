@@ -1,0 +1,54 @@
+plugins {
+    id 'com.android.application'
+}
+
+def releaseSigningProperties = new Properties()
+def signingPropertiesPath = System.getenv('PIXI_SNAPSHOT_SIGNING_PROPERTIES')
+def hasReleaseSigning = signingPropertiesPath != null && file(signingPropertiesPath).isFile()
+if (hasReleaseSigning) {
+    file(signingPropertiesPath).withInputStream { releaseSigningProperties.load(it) }
+}
+
+android {
+    namespace 'org.nullprotocol.pixisnapshot'
+    testBuildType System.getenv('PIXI_TEST_BUILD_TYPE') ?: 'debug'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'org.nullprotocol.pixisnapshot'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '0.1.0'
+        testInstrumentationRunner 'org.nullprotocol.pixisnapshot.ReleaseChecks'
+    }
+
+    if (hasReleaseSigning) {
+        signingConfigs {
+            release {
+                storeFile file(releaseSigningProperties.getProperty('storeFile'))
+                storePassword releaseSigningProperties.getProperty('storePassword')
+                keyAlias releaseSigningProperties.getProperty('keyAlias')
+                keyPassword releaseSigningProperties.getProperty('keyPassword')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.github.mwiede:jsch:2.28.7'
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.86'
+}
